@@ -1,0 +1,65 @@
+type: "transformation"
+version: "1.0"
+pipeline:
+  components:
+    CUSTOMER:
+      type: "table-input"
+      parameters:
+        componentName: "CUSTOMER"
+        database: "SNOWFLAKE_SAMPLE_DATA"
+        schema: "TPCH_SF1"
+        targetTable: "CUSTOMER"
+        columnNames:
+        - "C_CUSTKEY"
+        - "C_NAME"
+        - "C_ADDRESS"
+        - "C_NATIONKEY"
+        - "C_PHONE"
+        - "C_ACCTBAL"
+        - "C_MKTSEGMENT"
+        - "C_COMMENT"
+        timeOffset:
+    Calculator:
+      type: "calculator"
+      sources:
+      - "CUSTOMER"
+      parameters:
+        componentName: "Calculator"
+        includeInputColumns: "Yes"
+        calculations:
+        - - "CURRENT_USER()"
+          - "USER"
+        - - "CURRENT_TIMESTAMP()"
+          - "ETL_LOADTIME"
+    Rewrite Table:
+      type: "rewrite-table"
+      sources:
+      - "Calculator"
+      parameters:
+        componentName: "Rewrite Table"
+        warehouse: "[Environment Default]"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "CUSTOMER_DATA"
+        orderBy:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+design:
+  components:
+    CUSTOMER:
+      position:
+        x: -10
+        "y": 110
+      tempMetlId:
+    Calculator:
+      position:
+        x: 190
+        "y": 110
+      tempMetlId:
+    Rewrite Table:
+      position:
+        x: 330
+        "y": 110
+      tempMetlId:

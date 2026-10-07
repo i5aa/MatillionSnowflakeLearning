@@ -1,0 +1,141 @@
+type: "orchestration"
+version: "1.0"
+pipeline:
+  components:
+    Start:
+      type: "start"
+      transitions:
+        unconditional:
+        - "Query Result To Scalar"
+      parameters:
+        componentName: "Start"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+    Run Nations_pipeline:
+      type: "run-transformation"
+      parameters:
+        componentName: "Run Nations_pipeline"
+        transformationJob: "First_folder/Nations_pipeline.tran.yaml"
+        setScalarVariables:
+        - - "country_name"
+          - "${country}"
+        setGridVariables:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+    Table Iterator:
+      type: "table-iterator"
+      iterationTarget: "Run Nations_pipeline"
+      parameters:
+        componentName: "Table Iterator"
+        mode: "Advanced"
+        concurrency: "Sequential"
+        breakOnFailure: "No"
+        stopOnCondition: "No"
+        recordValuesInTaskHistory: "Yes"
+        query: "SELECT N_NAME\r\nFROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.NATION"
+        columnMapping1:
+        - - "N_NAME"
+          - "country"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+    Query Result To Scalar:
+      type: "query-to-scalar"
+      transitions:
+        success:
+        - "If"
+      parameters:
+        componentName: "Query Result To Scalar"
+        mode: "Advanced"
+        query: "select count(*) as FLAG\r\nfrom INFORMATION_SCHEMA.TABLES \r\nwhere\
+          \ table_name ilike '%INDIA%'"
+        scalarVariableMapping:
+        - - "does_exist"
+          - "FLAG"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+    If:
+      type: "if"
+      transitions:
+        "true":
+        - "Table Iterator"
+        "false":
+        - "Run _copy_Nations_pipeline"
+      parameters:
+        componentName: "If"
+        mode: "Simple"
+        condition:
+        - - "does_exist"
+          - "Is"
+          - "Equal to"
+          - "0"
+        combineConditions: "And"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+    Run _copy_Nations_pipeline:
+      type: "run-transformation"
+      parameters:
+        componentName: "Run _copy_Nations_pipeline"
+        transformationJob: "First_folder/_copy_Nations_pipeline.tran.yaml"
+        setScalarVariables:
+        setGridVariables:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+  variables:
+    does_exist:
+      metadata:
+        type: "TEXT"
+        description: ""
+        scope: "SHARED"
+        visibility: "PUBLIC"
+      defaultValue: "0"
+    country:
+      metadata:
+        type: "TEXT"
+        description: ""
+        scope: "SHARED"
+        visibility: "PUBLIC"
+      defaultValue: "ABCD"
+design:
+  components:
+    Start:
+      position:
+        x: -220
+        "y": -20
+      tempMetlId:
+    Run Nations_pipeline:
+      position:
+        x: 210
+        "y": -90
+      tempMetlId:
+    Table Iterator:
+      position:
+        x: 210
+        "y": -90
+      tempMetlId:
+    Query Result To Scalar:
+      position:
+        x: -80
+        "y": -20
+      tempMetlId:
+    If:
+      position:
+        x: 60
+        "y": -20
+      tempMetlId:
+    Run _copy_Nations_pipeline:
+      position:
+        x: 220
+        "y": 70
+      tempMetlId:

@@ -1,0 +1,134 @@
+type: "transformation"
+version: "1.0"
+pipeline:
+  components:
+    CUSTOMER:
+      type: "table-input"
+      parameters:
+        componentName: "CUSTOMER"
+        database: "SNOWFLAKE_SAMPLE_DATA"
+        schema: "TPCH_SF1"
+        targetTable: "CUSTOMER"
+        columnNames:
+        - "C_CUSTKEY"
+        - "C_NAME"
+        - "C_ADDRESS"
+        - "C_NATIONKEY"
+        - "C_PHONE"
+        - "C_ACCTBAL"
+        - "C_MKTSEGMENT"
+        - "C_COMMENT"
+        timeOffset:
+    NATION:
+      type: "table-input"
+      parameters:
+        componentName: "NATION"
+        database: "SNOWFLAKE_SAMPLE_DATA"
+        schema: "TPCH_SF1"
+        targetTable: "NATION"
+        columnNames:
+        - "N_NATIONKEY"
+        - "N_NAME"
+        - "N_REGIONKEY"
+        - "N_COMMENT"
+        timeOffset:
+    Join:
+      type: "join"
+      sources:
+      - "CUSTOMER"
+      - "NATION"
+      parameters:
+        componentName: "Join"
+        mainTable: "CUSTOMER"
+        mainTableAlias: "c"
+        joins:
+        - - "NATION"
+          - "j"
+          - "Inner"
+        joinExpressions:
+        - - "\"c\".\"C_NATIONKEY\" = \"j\".\"N_NATIONKEY\""
+          - "c_Inner_j"
+        columnMappings:
+        - - "c.C_CUSTKEY"
+          - "C_CUSTKEY"
+        - - "c.C_NAME"
+          - "C_NAME"
+        - - "c.C_ADDRESS"
+          - "C_ADDRESS"
+        - - "c.C_PHONE"
+          - "C_PHONE"
+        - - "c.C_ACCTBAL"
+          - "C_ACCTBAL"
+        - - "c.C_MKTSEGMENT"
+          - "C_MKTSEGMENT"
+        - - "c.C_COMMENT"
+          - "C_COMMENT"
+        - - "j.N_NATIONKEY"
+          - "N_NATIONKEY"
+        - - "j.N_NAME"
+          - "N_NAME"
+        - - "j.N_REGIONKEY"
+          - "N_REGIONKEY"
+    Filter:
+      type: "filter"
+      sources:
+      - "Join"
+      parameters:
+        componentName: "Filter"
+        mode: "Basic"
+        filterConditions:
+        - - "N_NAME"
+          - "Is"
+          - "Equal to"
+          - "${country_name}"
+        combineCondition: "And"
+    Rewrite Table:
+      type: "rewrite-table"
+      sources:
+      - "Filter"
+      parameters:
+        componentName: "Rewrite Table"
+        warehouse: "[Environment Default]"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "${country_name}"
+        orderBy:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+        updateGridVariables:
+  variables:
+    country_name:
+      metadata:
+        type: "TEXT"
+        description: ""
+        scope: "SHARED"
+        visibility: "PUBLIC"
+      defaultValue: "CHINA"
+design:
+  components:
+    CUSTOMER:
+      position:
+        x: -270
+        "y": -10
+      tempMetlId:
+    NATION:
+      position:
+        x: -270
+        "y": 100
+      tempMetlId:
+    Join:
+      position:
+        x: -110
+        "y": 40
+      tempMetlId:
+    Filter:
+      position:
+        x: 0
+        "y": 40
+      tempMetlId:
+    Rewrite Table:
+      position:
+        x: 120
+        "y": 40
+      tempMetlId:
